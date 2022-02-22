@@ -1,6 +1,6 @@
 public class BallThread extends Thread {
     private Ball b;
-    private int TIME = 10000;
+    private int TTL = 10000;
 
     public BallThread(Ball ball){
         b = ball;
@@ -13,6 +13,10 @@ public class BallThread extends Thread {
                 System.out.println("Thread name = "
                         + Thread.currentThread().getName());
                 Thread.sleep(5);
+                if (b.rolledIntoPocket) {
+                    System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted");
+                    break;
+                }
 
             }
         } catch(InterruptedException ex){
@@ -21,7 +25,7 @@ public class BallThread extends Thread {
     }
 
 
-    public void setTIME(int TIME) {
-        this.TIME = TIME;
+    public void setTTL(int TTL) {
+        this.TTL = TTL;
     }
 }

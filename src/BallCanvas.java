@@ -24,7 +24,6 @@ public class BallCanvas extends JPanel {
     }
 
     public void remove(Ball b) {
-        //Score.increase();
         this.balls.remove(b);
     }
 
@@ -32,23 +31,28 @@ public class BallCanvas extends JPanel {
     public void paintComponent(Graphics g){
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D)g;
-        for(int i = 0; i < balls.size();i++){
-            for (Pocket p : pockets) {
-                if (balls.get(i).isInPool(p)) {
-                    balls.get(i).isInPool = true;
+        score = 0;
+        int previousBallsNumber = balls.size();
+        for(int i = 0; i < balls.size(); i++){
+            if (balls.size() < previousBallsNumber) {
+                i--;
+            }
+            for (Pocket pocket : pockets) {
+                if (balls.get(i).rolledIntoPocket(pocket)) {
+                    balls.get(i).rolledIntoPocket = true;
+                    previousBallsNumber = balls.size();
                     remove(balls.get(i));
                     score++;
                     break;
                 }
             }
-            if (!balls.get(i).isInPool) {
+            if (!balls.isEmpty() && !balls.get(i).rolledIntoPocket) {
                 balls.get(i).draw(g2);
             }
         }
 
-        for(int i = 0; i < pockets.size();i++){
-            Pocket p = pockets.get(i);
-            p.draw(g2);
+        for (Pocket pocket : pockets) {
+            pocket.draw(g2);
         }
     }
 }

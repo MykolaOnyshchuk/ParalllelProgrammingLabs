@@ -7,7 +7,7 @@ public class BounceFrame extends JFrame {
     private BallCanvas canvas;
     private static final int N_BLUE_BALLS = 1000;
     private static final int N_RED_BALLS = 1;
-    private static final int N_JOIN_EXPERIMENT = 10;
+    private static final int N_JOIN = 10;
     public static final int WIDTH = 850;
     public static final int HEIGHT = 600;
     public static final int PocketSize = 24;
@@ -32,45 +32,15 @@ public class BounceFrame extends JFrame {
         scoreLabel.setText("Current score: " + this.canvas.getScore());
 
         System.out.println("Daemon thread name = " + Thread.currentThread().getName());
-//        while (!Thread.currentThread().isInterrupted()) {
-//            scoreLabel.setText("Score: " + this.canvas.getScore());
-//            scoreLabel.repaint();
-//            try {
-//                Thread.sleep(5);
-//            } catch (InterruptedException ignored) {
-//            }
-//        }
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.add(scoreLabel);
         buttonPanel.setBackground(Color.lightGray);
-        JButton buttonStart = new JButton("Start");
-        JButton buttonStop = new JButton("Stop");
         JButton buttonAddBlueBall = new JButton("Add blue ball");
         JButton buttonAddRedBall = new JButton("Add red ball");
-        JButton buttonPriorityExperiment = new JButton("Red/Blue priority experiment");
+        JButton buttonPriorityExperiment = new JButton("Priority experiment");
         JButton buttonJoinExperiment = new JButton("Join");
-//        buttonStart.addActionListener(new ActionListener() {
-//
-//            @Override
-//            public void actionPerformed(ActionEvent e) {
-//
-//                Ball b = new Ball(canvas);
-//                canvas.add(b);
-//
-//                BallThread thread = new BallThread(b);
-//                thread.start();
-//                System.out.println("Thread name = " +
-//                        thread.getName());
-//            }
-//        });
-        buttonStop.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-
-                System.exit(0);
-            }
-        });
+        JButton buttonStop = new JButton("Stop");
 
         buttonAddBlueBall.addActionListener(
                 new ActionListener() {
@@ -94,7 +64,7 @@ public class BounceFrame extends JFrame {
                 new ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
-                        createPriorityExperiment();
+                        startPriorityExperiment();
                     }
                 });
 
@@ -105,7 +75,11 @@ public class BounceFrame extends JFrame {
                         Runnable updatePanel =
                                 new Runnable() {
                                     public void run() {
-                                        createJoinExperiment();
+                                        try {
+                                            startJoinExperiment();
+                                        } catch (InterruptedException ex) {
+                                            ex.printStackTrace();
+                                        }
                                     }
                                 };
                         Thread t = new Thread(updatePanel);
@@ -113,12 +87,19 @@ public class BounceFrame extends JFrame {
                     }
                 });
 
-        buttonPanel.add(buttonStart);
-        buttonPanel.add(buttonStop);
+        buttonStop.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                System.exit(0);
+            }
+        });
+
         buttonPanel.add(buttonAddBlueBall);
         buttonPanel.add(buttonAddRedBall);
         buttonPanel.add(buttonPriorityExperiment);
         buttonPanel.add(buttonJoinExperiment);
+        buttonPanel.add(buttonStop);
         content.add(buttonPanel, BorderLayout.SOUTH);
 
 
@@ -147,26 +128,7 @@ public class BounceFrame extends JFrame {
         System.out.println("Thread name = " + thread.getName());
     }
 
-    private void createBall(Color color, int priority, int x, int y, int TIME) {
-        Ball b = new Ball(canvas, color, x, y);
-        canvas.add(b);
-
-        BallThread thread = new BallThread(b);
-        thread.setTIME(TIME);
-        thread.setPriority(priority);
-        thread.start();
-
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-
-        System.out.println("Thread name = " + thread.getName());
-    }
-
-    private void createPriorityExperiment() {
+    private void startPriorityExperiment() {
         Color color = Color.BLUE;
         for (int i = 0; i < N_BLUE_BALLS; i++) {
             createBall(color, 1, WIDTH / 2, HEIGHT / 2);
@@ -178,10 +140,10 @@ public class BounceFrame extends JFrame {
         }
     }
 
-    private void createJoinExperiment() {
-        int TIME = 1000;
+    private void startJoinExperiment() throws InterruptedException {
+        int time = 1000;
 
-        for (int i = 0; i < N_JOIN_EXPERIMENT; i++) {
+        for (int i = 0; i < N_JOIN; i++) {
             Color color;
             if (i % 2 == 0) {
                 color = Color.BLUE;
@@ -193,14 +155,17 @@ public class BounceFrame extends JFrame {
             canvas.add(b);
 
             BallThread thread = new BallThread(b);
-            thread.setTIME(TIME);
-            thread.setPriority(Thread.MIN_PRIORITY);
+            thread.setTTL(time);
+            thread.setPriority(Thread.NORM_PRIORITY);
             thread.start();
+            Thread.sleep(5);
 
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            if (i == 8) {
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
 
 
